@@ -21,9 +21,9 @@ async fn main() {
         }
         serde_json::to_string_pretty(&files).unwrap()
     });
-    let files = warp::path("files").and(warp::fs::dir("mtx/")).map(|x|{
-        warp::reply::with_header(x, "Content-Type", "text/plain" )
-    });
+    let files = warp::path("files")
+        .and(warp::fs::dir("mtx/"))
+        .map(|x| warp::reply::with_header(x, "Content-Type", "text/plain"));
     let upload_route = warp::path("upload")
         .and(warp::post())
         .and(warp::multipart::form().max_length(5_000_000))
@@ -33,9 +33,10 @@ async fn main() {
         .or(files)
         .or(upload_route)
         .recover(handle_rejection);
+    let routes = routes.map(|x| warp::reply::with_header(x, "Access-Control-Allow-Origin", "*"));
 
-    println!("running on http://localhost:3030");
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    println!("running on http://0.0.0.0:3030");
+    warp::serve(routes).run(([0, 0, 0, 0], 3030)).await;
 }
 
 async fn upload(form: FormData) -> Result<impl Reply, Rejection> {
