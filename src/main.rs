@@ -21,6 +21,12 @@ async fn main() {
         }
         serde_json::to_string_pretty(&files).unwrap()
     });
+    let update_git = warp::path("updategit").map(|| {
+        let mut cmd = std::process::Command::new("git");
+        cmd.arg("pull");
+        let output = cmd.output().unwrap();
+        warp::reply::with_header(output.stdout, "Content-Type", "text/plain")
+    });
     let files = warp::path("files")
         .and(warp::fs::dir("mtx/"))
         .map(|x| warp::reply::with_header(x, "Content-Type", "text/plain"));
@@ -32,6 +38,7 @@ async fn main() {
     let routes = file_list
         .or(files)
         .or(upload_route)
+        .or(update_git)
         .recover(handle_rejection);
     let routes = routes.map(|x| warp::reply::with_header(x, "Access-Control-Allow-Origin", "*"));
 

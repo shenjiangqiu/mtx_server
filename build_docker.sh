@@ -1,0 +1,1 @@
+docker build -t jiangqiu/mtx_server:1.1 .
